@@ -43,7 +43,7 @@ jobs:
           
           # Create production environment file
           echo "⚙️ Setting up environment..."
-          echo "VUE_APP_API_URL=http://${{ secrets.EC2_HOST }}/api" > .env
+          echo "VUE_APP_API_URL=https://${{ secrets.EC2_HOST }}/api" > .env
           
           # Build for production
           echo "🏗️ Building for production..."
@@ -86,7 +86,7 @@ jobs:
           
           # Test API connectivity from frontend perspective
           echo "🔗 Testing API connectivity..."
-          API_URL="http://${{ secrets.EC2_HOST }}/api/health"
+          API_URL="https://${{ secrets.EC2_HOST }}/api/health"
           if curl -f -s "$API_URL" > /dev/null; then
             echo "✅ API is accessible from public URL"
           else
