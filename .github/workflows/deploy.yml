@@ -1,3 +1,6 @@
+# .github/workflows/deploy.yml  
+# GitHub Actions workflow for Vue.js Frontend Auto-Deployment
+
 name: Deploy Frontend to EC2
 
 on:
@@ -34,19 +37,25 @@ jobs:
           git fetch origin
           git reset --hard origin/main
           
-          # Install/update dependencies
+          # Install/update dependencies (including dev dependencies for building)
           echo "📚 Installing npm dependencies..."
-          npm ci --only=production
+          npm ci
           
           # Create production environment file
           echo "⚙️ Setting up environment..."
-          cat > .env <<EOF
-          VUE_APP_API_URL=http://${{ secrets.EC2_HOST }}/api
-          EOF
+          echo "VUE_APP_API_URL=http://${{ secrets.EC2_HOST }}/api" > .env
           
           # Build for production
           echo "🏗️ Building for production..."
-          npm run build
+          NODE_ENV=production npm run build
+          
+          # Check if build was successful
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed - dist directory not found"
+            exit 1
+          fi
+          
+          echo "✅ Build completed successfully"
           
           # Backup current frontend (just in case)
           echo "📦 Creating backup..."
@@ -77,7 +86,8 @@ jobs:
           
           # Test API connectivity from frontend perspective
           echo "🔗 Testing API connectivity..."
-          if curl -f -s http://${{ secrets.EC2_HOST }}/api/health > /dev/null; then
+          API_URL="http://${{ secrets.EC2_HOST }}/api/health"
+          if curl -f -s "$API_URL" > /dev/null; then
             echo "✅ API is accessible from public URL"
           else
             echo "⚠️ API might not be accessible from public URL"
